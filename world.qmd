@@ -1,0 +1,112 @@
+---
+title: "코로나19 대쉬보드"
+format: dashboard
+---
+
+# 전세계
+
+## Row
+
+```{r}
+#| content: valuebox
+#| title: "확진자수"
+
+list(
+  icon = "hospital",
+  color = "yellow",
+  value = valuebox_world$사례수[1]
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "사망자수"
+
+list(
+  icon = "moon-fill",
+  color = "danger",
+  value = valuebox_world$사례수[2]
+)
+```
+
+```{r}
+#| content: valuebox
+#| title: "회복자수"
+
+list(
+  icon = "heart-fill",
+  color = "green",
+  value = valuebox_world$사례수[3]
+)
+```
+
+## Column
+
+### Chart 1
+
+{{< unsplash dog.jpg >}}
+
+```{r}
+library(tidyverse)
+library(gt)
+coronavirus <- coronavirus::coronavirus %>% 
+  as_tibble() %>%
+  janitor::clean_names() 
+
+coronavirus |> 
+  mutate(yearmon = floor_date(date, "month")) |> 
+  group_by(yearmon, type) |>
+  summarise(사례수 = sum(cases)) |> 
+  pivot_wider(names_from = type, values_from = 사례수) |> 
+  ungroup() |> 
+  arrange(desc(yearmon)) |> 
+  slice(1:10) |> 
+  gt() |> 
+  cols_align(columns = yearmon, "center") |> 
+  cols_label(yearmon = "년월",
+             confirmed = "확진자수", 
+             death = "사망자수", 
+             recovery = "회복자수") |> 
+  fmt_number(columns = 2:4, decimals = 0) |> 
+  data_color(
+    columns = recovery,
+    palette = "Greens"
+  ) |>
+  data_color(
+    columns = death,
+    palette = "Purples"
+  ) |>
+  data_color(
+    columns = confirmed,
+    palette = "Blues"
+  )  
+```
+
+### Chart 2
+
+{{< unsplash cat.jpg >}}
+
+
+```{r}
+coronavirus |> 
+  mutate(yearmon = floor_date(date, "month")) |> 
+  group_by(yearmon, type) |>
+  summarise(사례수 = sum(cases)) |> 
+  ungroup() |> 
+  ggplot(aes(x = yearmon, y = 사례수, color = type)) +
+   geom_line() +
+   geom_point() +
+   theme_minimal(base_family = "NanumGothic") +
+   theme(legend.position = "none") +
+   scale_y_sqrt(labels = scales::comma) +
+   labs(title = "전세계 코로나19 추이",
+        y = "사례수",
+        x = NULL,
+        color = "종류") +
+    facet_wrap(~type, scales = "free_y")
+```
+
+
+
+
+
